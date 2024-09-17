@@ -84,11 +84,16 @@ class QuestionnaireService implements QuestionnaireServiceInterface
     private function setStatuses(int $userId, int $delay): void
     {
         $questionnaires = $this->questionnaireRepository->getAllByUserId($userId);
+        $isApproved = false;
 
         foreach ($questionnaires as $questionnaire) {
-            $isApproved = $this->isApproved($questionnaire->status);
             $questionnaire->status = $isApproved === true ?
                 Questionnaire::STATUS_DECLINED : $this->getStatus();
+
+            // Была ли одобрена хотя бы одна заявка
+            if($questionnaire->status === Questionnaire::STATUS_APPROVED){
+                $isApproved = true;
+            }
 
             sleep($delay);
 
@@ -105,13 +110,5 @@ class QuestionnaireService implements QuestionnaireServiceInterface
         $isApproved = (rand(1, 100)) <= self::APPROVE_CHANCE;
 
         return $isApproved ? Questionnaire::STATUS_APPROVED : Questionnaire::STATUS_DECLINED;
-    }
-
-    /**
-     * Была ли одобрена хотя бы одна заявка
-     */
-    private function isApproved(string $status): bool
-    {
-        return $status === Questionnaire::STATUS_APPROVED;
     }
 }
